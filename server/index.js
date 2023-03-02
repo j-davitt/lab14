@@ -7,10 +7,10 @@ const Queue = require('./lib/queue');
 const eventQueue = new Queue();
 
 const server = new Server();
-const caps = server.of('/caps');
+const tickets = server.of('/tickets');
 
-caps.on('connection', (socket) => {
-  console.log('Socket connected to caps namespace', socket.id);
+tickets.on('connection', (socket) => {
+  console.log('Socket connected to tickets namespace', socket.id);
   
   socket.onAny((event, payload) => {
     const time = new Date().toISOString();
@@ -37,7 +37,7 @@ caps.on('connection', (socket) => {
     currentQueue.store(payload.messageId, payload);
     console.log(currentQueue);
    
-    caps.emit('REQUEST', payload);
+    tickets.emit('REQUEST', payload);
   });
 
   socket.on('WORK-ORDER', (payload) => {
@@ -48,12 +48,12 @@ caps.on('connection', (socket) => {
     }
     currentQueue.store(payload.messageId, payload);
     console.log(currentQueue);
-    caps.emit('WORK-ORDER', payload);
+    tickets.emit('WORK-ORDER', payload);
   });
 
   socket.on('IN-PROGRESS', (payload) => {
    
-    caps.emit('IN-PROGRESS', payload);
+    tickets.emit('IN-PROGRESS', payload);
   });
 
   socket.on('COMPLETED', (payload) => {
@@ -65,7 +65,7 @@ caps.on('connection', (socket) => {
     currentQueue.store(payload.messageId, payload);
     console.log(currentQueue);
     
-    caps.emit('COMPLETED', payload);
+    tickets.emit('COMPLETED', payload);
   });
 
   socket.on('RECEIVED', (payload) => {
@@ -76,7 +76,7 @@ caps.on('connection', (socket) => {
     }
     currentQueue.remove(payload.messageId);
     console.log(currentQueue);
-    caps.emit('RECEIVED');
+    tickets.emit('RECEIVED');
   });
 
   socket.on('GETALL-ORDERS', (payload) => {

@@ -4,7 +4,7 @@
 // const handler = require('./handler');
 const { io } = require('socket.io-client');
 
-const socket = io.connect('http://localhost:3001/caps');
+const socket = io.connect('http://localhost:3001/tickets');
 
 // socket.emit('JOIN', payload.store); need to join room for specific store
 // socket.emit('getAll', {store: '1-206-flowers'});
