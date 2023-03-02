@@ -6,21 +6,12 @@ const PORT = process.env.PORT || 3002;
 const Queue = require('./lib/queue');
 const eventQueue = new Queue();
 
-// socket server singleton: listening for events at localhost:3001
 const server = new Server();
 const caps = server.of('/caps');
 
-// function logger(event, payload) {
-//   console.log({
-//     event,
-//     time: new Date().toISOString(),
-//     payload,
-//   });
-// }
-
 caps.on('connection', (socket) => {
   console.log('Socket connected to caps namespace', socket.id);
-  // checkout socket.onAny() to see all events
+  
   socket.onAny((event, payload) => {
     const time = new Date().toISOString();
     console.log({
@@ -36,69 +27,67 @@ caps.on('connection', (socket) => {
     socket.join(room);
   });
 
-  socket.on('pickup', (payload) => {
+  socket.on('REQUEST', (payload) => {
     
-    let currentQueue = eventQueue.read('DRIVER');
+    let currentQueue = eventQueue.read(payload.queueId);
     if(!currentQueue){
-      let queueKey = eventQueue.store('DRIVER', new Queue());
+      let queueKey = eventQueue.store(payload.queueId, new Queue());
       currentQueue= eventQueue.read(queueKey);
     }
-    currentQueue.store(payload.orderID, payload);
-    // console.log(currentQueue);
-
-    caps.emit('pickup', payload);
-  });
-
-  // socket.on('pickup', (payload) => {
-    
-  //   let currentQueue = eventQueue.read(payload.store);
-  //   if(!currentQueue){
-  //     let queueKey = eventQueue.store(payload.store, new Queue());
-  //     currentQueue= eventQueue.read(queueKey);
-  //   }
-  //   currentQueue.store(payload.orderID, payload);
-  //   console.log(currentQueue);
-
-  //   caps.emit('pickup', payload);
-  // });
-
-  // these will use the caps.to(payload.store).emit() once the driver is set up to join a room as well.
-  socket.on('in-transit', (payload) => {
+    currentQueue.store(payload.messageId, payload);
+    console.log(currentQueue);
    
-    caps.emit('in-transit', payload);
+    caps.emit('REQUEST', payload);
   });
 
-  socket.on('delivered', (payload) => {
-    let currentQueue = eventQueue.read(payload.store);
+  socket.on('WORK-ORDER', (payload) => {
+    let currentQueue = eventQueue.read(payload.queueId);
     if(!currentQueue){
-      let queueKey = eventQueue.store(payload.store, new Queue());
+      let queueKey = eventQueue.store(payload.queueId, new Queue());
       currentQueue= eventQueue.read(queueKey);
     }
-    currentQueue.store(payload.orderID, payload);
-    // console.log(currentQueue);
-    
-    caps.emit('delivered', payload);
+    currentQueue.store(payload.messageId, payload);
+    console.log(currentQueue);
+    caps.emit('WORK-ORDER', payload);
   });
 
-  socket.on('received', (payload) => {
-    let id = payload.queueId ? payload.queueId : payload.store;
-    let currentQueue = eventQueue.read(id);
+  socket.on('IN-PROGRESS', (payload) => {
+   
+    caps.emit('IN-PROGRESS', payload);
+  });
+
+  socket.on('COMPLETED', (payload) => {
+    let currentQueue = eventQueue.read(payload.queueId);
     if(!currentQueue){
-      throw new Error('No queue found for store: ' + payload.store);
+      let queueKey = eventQueue.store(payload.queueId, new Queue());
+      currentQueue= eventQueue.read(queueKey);
     }
-    let message = currentQueue.remove(payload.orderID);
-    // console.log(currentQueue);
-    caps.emit('received', message);
+    currentQueue.store(payload.messageId, payload);
+    console.log(currentQueue);
+    
+    caps.emit('COMPLETED', payload);
   });
 
-  socket.on('getAll', (payload) => {
-    let id = payload.queueId ? payload.queueId : payload.store;
-    let currentQueue = eventQueue.read(id);
+  socket.on('RECEIVED', (payload) => {
+    // console.log(eventQueue);
+    let currentQueue = eventQueue.read(payload.queueId);
+    if(!currentQueue){
+      throw new Error('No queue found for ' + payload.queueId);
+    }
+    currentQueue.remove(payload.messageId);
+    console.log(currentQueue);
+    caps.emit('RECEIVED');
+  });
+
+  socket.on('GETALL-ORDERS', (payload) => {
+    let currentQueue = eventQueue.read(payload.queueId);
     if(currentQueue && currentQueue.data){
-      Object.keys(currentQueue.data).forEach((orderID) => {
-        socket.emit('pickup', currentQueue.read(orderID));
+      Object.keys(currentQueue.data).forEach((messageId) => {
+        let payload = currentQueue.read(messageId);
+        socket.emit(payload.queueId, payload);
 
       });
+      console.log(currentQueue);
     }
   });
 });
