@@ -6,7 +6,7 @@
 const { io } = require('socket.io-client');
 // const { packageDelivered, generateOrder } = require('./handler');
 
-const socket = io.connect('http://localhost:3001/caps');
+const socket = io.connect("http://localhost:3001/tickets");
 
 socket.emit('GETALL-ORDERS', { queueId: 'WORK-ORDER' });
 
