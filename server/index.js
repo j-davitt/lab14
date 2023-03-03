@@ -35,7 +35,7 @@ tickets.on('connection', (socket) => {
       currentQueue= eventQueue.read(queueKey);
     }
     currentQueue.store(payload.messageId, payload);
-    console.log(currentQueue);
+    // console.log(currentQueue);
    
     tickets.emit('REQUEST', payload);
   });
@@ -47,7 +47,7 @@ tickets.on('connection', (socket) => {
       currentQueue= eventQueue.read(queueKey);
     }
     currentQueue.store(payload.messageId, payload);
-    console.log(currentQueue);
+    // console.log(currentQueue);
     tickets.emit('WORK-ORDER', payload);
   });
 
@@ -63,7 +63,7 @@ tickets.on('connection', (socket) => {
       currentQueue= eventQueue.read(queueKey);
     }
     currentQueue.store(payload.messageId, payload);
-    console.log(currentQueue);
+    // console.log(currentQueue);
     
     tickets.emit('COMPLETED', payload);
   });
@@ -87,7 +87,7 @@ tickets.on('connection', (socket) => {
         socket.emit(payload.queueId, payload);
 
       });
-      console.log(currentQueue);
+      // console.log(currentQueue);
     }
   });
 });
